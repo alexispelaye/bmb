@@ -2,9 +2,10 @@ import express from 'express';
 import authRouter from './routes/auth.route';
 
 const port = 3000;
-const app = express('api');
-app.use(express.json());
+const app = express();
 
+app.use(express.json());
+app.use('api')
 app.get('/', (req, res) => {
   res.send('Hola mundo');
 })
