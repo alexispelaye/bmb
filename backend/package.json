@@ -2,11 +2,11 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --import @swc-node/register/esm-register index.js"
+    "start": "node --import @swc-node/register/esm-register src/server.js"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,11 @@
   "devDependencies": {
     "@swc-node/register": "^1.11.1",
     "@swc/cli": "^0.7.8",
-    "@swc/core": "^1.13.19"
+    "@swc/core": "^1.13.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.5.2",
+    "@types/pg": "^8.15.5",
+    "cross-env": "^10.0.0"
   }
 }
