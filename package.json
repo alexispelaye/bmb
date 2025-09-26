@@ -2,9 +2,11 @@
   "name": "base-fullstack",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "docker:up": "sudo docker compose --env-file ./backend/.env up -d",
+    "docker:down": "sudo docker compose --env-file ./backend/.env down",
+    "backend:start": "cd backend && npm run start"
   },
   "repository": {
     "type": "git",
@@ -13,7 +15,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/alexispelaye/base-fullstack/issues"
   },
