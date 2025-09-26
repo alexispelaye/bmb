@@ -1,9 +1,8 @@
-
 interface Envs {
   DB_CONTAINER_NAME: string;
   DB_NAME: string;
   DB_USER: string;
-  DB_PASS: string;
+  DB_PASSWORD: string;
   DB_EXT_PORT: number;
   DB_INT_PORT: number;
   DB_HOST: string;
@@ -40,9 +39,6 @@ class Requireable {
 
 const getEnv = (key: string) => {
   const value = process.env[key];
-  if (!value) {
-    throw new Error(`Missing env variable: ${key}`);
-  }
   return new Requireable(value);
 }
 
@@ -53,6 +49,6 @@ export const envs: Envs = {
   DB_INT_PORT: getEnv('DB_INT_PORT').required().toInt(),
   DB_NAME: getEnv('DB_NAME').required().value,
   DB_USER: getEnv('DB_USER').required().value,
-  DB_PASS: getEnv('DB_PASS').required().value,
+  DB_PASSWORD: getEnv('DB_PASSWORD').required().value,
   DB_HOST: getEnv('DB_HOST').required().value,
 }
