@@ -6,6 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "docker:up": "sudo docker compose --env-file ./backend/.env up -d",
     "docker:down": "sudo docker compose --env-file ./backend/.env down",
+    "docker:delete": "sudo docker compose --env-file ./backend/.env down -v",
     "backend:start": "cd backend && npm run start"
   },
   "repository": {
