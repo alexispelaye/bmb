@@ -8,7 +8,8 @@
     "docker:down": "sudo docker compose --env-file ./backend/.env down",
     "docker:delete": "sudo docker compose --env-file ./backend/.env down -v",
     "backend:start": "cd backend && npm run start",
-    "frontend:start": "cd frontend && npm run start"
+    "frontend:start": "cd frontend && npm run start",
+    "start": "concurrently -n backend,frontend -c 'blue.bold,magenta.bold' 'npm run backend:start' 'npm run frontend:start'"
   },
   "repository": {
     "type": "git",
@@ -24,5 +25,8 @@
   "workspaces": [
     "frontend",
     "backend"
-  ]
+  ],
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
 }
