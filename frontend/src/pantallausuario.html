@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Personal - Sistema EPP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --primary-dark: #b71c1c;
+            --dark: #212121;
+            --success: #4caf50;
+            --gray: #757575;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f9f9f9;
+            color: var(--dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .user-panel {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 700px; /* Ancho ajustado para el formulario */
+        }
+
+        .user-panel h1 {
+            color: var(--primary);
+            margin-bottom: 5px;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .user-panel p.subtitle {
+            font-size: 1.1rem;
+            color: var(--gray);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        /* Formulario y Grupos */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        
+        /* Estilo para la lista de EPP (Similar al de pantallaadmin.html) */
+        .epp-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .epp-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .epp-item i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .epp-item h4 {
+            margin-bottom: 10px;
+            font-size: 1rem;
+            color: var(--dark);
+        }
+
+        .btn-submit {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-logout {
+            background: #ccc;
+            color: var(--dark);
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 20px;
+            float: right;
+            transition: background 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #bbb;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-panel">
+        <button class="btn-logout" onclick="window.location.href='login.html'">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+
+        <h1><i class="fas fa-clipboard-list"></i> Inventario de EPP Personal</h1>
+        <p class="subtitle">Verifique la existencia de sus objetos de protección personal.</p>
+
+        <form id="inventoryForm">
+            <div class="form-group">
+                <label for="bomberoName">Nombre del Bombero</label>
+                <input type="text" id="bomberoName" value="Bombero Juan Pérez (Móvil 25)" readonly style="background-color: #eee; font-weight: bold; color: var(--primary);">
+            </div>
+
+            <h4>Existencia de Objetos Requeridos</h4>
+            <div class="epp-items">
+                
+                <div class="epp-item">
+                    <i class="fas fa-helmet-safety"></i>
+                    <h4>Casco</h4>
+                    <select id="item-casco">
+                        <option value="si" selected>Sí (En existencia)</option>
+                        <option value="no">No (Falta)</option>
+                    </select>
+                </div>
+
+                <div class="epp-item">
+                    <i class="fas fa-shoe-prints"></i>
+                    <h4>Botas</h4>
+                    <select id="item-botas">
+                        <option value="si" selected>Sí (En existencia)</option>
+                        <option value="no">No (Falta)</option>
+                    </select>
+                </div>
+
+                <div class="epp-item">
+                    <i class="fas fa-tshirt"></i>
+                    <h4>Mameluco (Traje)</h4>
+                    <select id="item-mameluco">
+                        <option value="si" selected>Sí (En existencia)</option>
+                        <option value="no">No (Falta)</option>
+                    </select>
+                </div>
+
+                <div class="epp-item">
+                    <i class="fas fa-hand-paper"></i>
+                    <h4>Guantes</h4>
+                    <select id="item-guantes">
+                        <option value="si" selected>Sí (En existencia)</option>
+                        <option value="no">No (Falta)</option>
+                    </select>
+                </div>
+                
+            </div>
+
+            <div class="form-group">
+                <label for="missingCheck">¿Falta algún otro objeto que deba tener o reportar?</label>
+                <select id="missingCheck">
+                    <option value="no">No, todo el equipo está en mi posesión.</option>
+                    <option value="si">Sí, falta algo o hay un problema.</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="comments">Comentarios/Detalles</label>
+                <textarea id="comments" rows="4" placeholder="Especifique cualquier problema, elemento faltante o el estado general de su equipo."></textarea>
+            </div>
+            
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i> Enviar Reporte de Inventario
+            </button>
+        </form>
+    </div>
+    
+    <script>
+        document.getElementById('inventoryForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const bombero = document.getElementById('bomberoName').value;
+            const casco = document.getElementById('item-casco').value;
+            const botas = document.getElementById('item-botas').value;
+            const mameluco = document.getElementById('item-mameluco').value;
+            const guantes = document.getElementById('item-guantes').value;
+            const missingCheck = document.getElementById('missingCheck').value;
+            const comments = document.getElementById('comments').value;
+
+            let report = `REPORTE DE INVENTARIO ENVIADO\n\n`;
+            report += `Bombero: ${bombero}\n\n`;
+            report += `--- Existencia de Objetos ---\n`;
+            report += `Casco: ${casco === 'si' ? 'Sí' : 'NO'}\n`;
+            report += `Botas: ${botas === 'si' ? 'Sí' : 'NO'}\n`;
+            report += `Mameluco: ${mameluco === 'si' ? 'Sí' : 'NO'}\n`;
+            report += `Guantes: ${guantes === 'si' ? 'Sí' : 'NO'}\n\n`;
+            report += `Falta otro objeto: ${missingCheck === 'si' ? 'SÍ' : 'No'}\n`;
+            report += `Comentarios: ${comments || 'Ninguno'}\n\n`;
+            report += `(Este es un reporte simulado. En un sistema real, los datos se enviarían al servidor.)`;
+
+            alert(report);
+            
+            // Opcional: Redirigir o limpiar formulario después de un envío exitoso
+            // this.reset();
+        });
+    </script>
+</body>
+</html>

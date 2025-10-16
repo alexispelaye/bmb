@@ -7,7 +7,8 @@
     "docker:up": "sudo docker compose --env-file ./backend/.env up -d",
     "docker:down": "sudo docker compose --env-file ./backend/.env down",
     "docker:delete": "sudo docker compose --env-file ./backend/.env down -v",
-    "backend:start": "cd backend && npm run start"
+    "backend:start": "cd backend && npm run start",
+    "frontend:start": "cd frontend && npm run start"
   },
   "repository": {
     "type": "git",
