@@ -54,10 +54,6 @@ export const getStats: RequestHandler = async (req, res) => {
   }
 
   stats.activos = (await pool.query("SELECT COUNT(id) as total_bomberos FROM bombero")).rows[0].total_bomberos;
-  const estados = (await pool.query("SELECT estado, COUNT(id) AS total FROM bombero GROUP BY estado ORDER BY total DESC")).rows;
-  for (const estado of estados) {
-    stats[estado.estado] = estado.total;
-  }
 
   const newState = await pool.query(`
     SELECT

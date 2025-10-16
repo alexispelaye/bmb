@@ -1,22 +1,27 @@
 // const getEndpoint = (endpoint) => `https://prehistorically-juiciest-lenora.ngrok-free.dev/api/${endpoint}`
 const getEndpoint = (endpoint) => `http://localhost:3000/api/${endpoint}`
+
+const LOCAL_STORAGE_TOKEN_KEY = 'bmb-token';
+
 export class Session {
   #token;
   role;
-
+  constructor() {
+    this.recoverFromLocal();
+  }
   async authFetch(endpoint, options) {
-    const req = await fetch(getEndpoint(endpoint), {
+    const response = await fetch(getEndpoint(endpoint), {
       ...options,
       headers: {
         Authorization: `Bearer ${this.#token}`
       }
     })
     const data = await req.json()
-    return data
+    return { ok: response.ok, data }
   }
 
   async login(usuario, contraseña) {
-    const response = await fetch(getEndpoint('auth/login'), {
+    const res = await fetch(getEndpoint('auth/login'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -26,29 +31,64 @@ export class Session {
         password: contraseña
       })
     })
-    if (!response.ok) return false
-    const data = await response.json()
-    this.#token = data.token
-    this.role = data.role
-    console.log(this.role)
-    return true
+    if (!res.ok) return false
+    const data = await res.json()
+
+    const tmp = this.saveNewJwt(data.token);
+    console.log(tmp);
+    return tmp;
+  }
+
+  parseJwt(rawToken) {
+    try {
+      const parts = rawToken.split('.');
+      const payload = parts[1];
+      return JSON.parse(atob(payload));
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  }
+
+  recoverFromLocal() {
+    const rawToken = localStorage.getItem(LOCAL_STORAGE_TOKEN_KEY);
+    if (!rawToken) {
+      return false;
+    }
+    return this.saveJwt(rawToken)
+  }
+
+  saveJwt(token) {
+    const parsedToken = this.parseJwt(token);
+    if (!parsedToken) {
+      return false;
+    };
+    this.#token = token;
+    this.role = parsedToken['role'];
+    return true;
+  }
+
+  saveNewJwt(token) {
+    if (!this.saveJwt(token)) {
+      return false;
+    }
+    localStorage.setItem(LOCAL_STORAGE_TOKEN_KEY, token);
+    return true;
   }
 
   async registrarAdministrador(usuario, contraseña) {
-    const response = await fetch(getEndpoint('auth/registrar-admin'), {
+    const res = await this.authFetch('auth/registrar-admin', {
       method: 'POST',
       body: JSON.stringify({
         usuario,
         contraseña
       })
     })
-    if (!response.ok) return false
-    const data = await req.json()
-    return true
+    return res.ok;
   }
 
   async registrarBombero(nombre, apellido, movil, genero, tipo_bombero) {
-    const req = await fetch(getEndpoint('auth/registrar-bombero'), {
+    const res = await this.authFetch('auth/registrar-bombero', {
       method: 'POST',
       body: JSON.stringify({
         nombre,
@@ -58,9 +98,6 @@ export class Session {
         tipo_bombero
       })
     })
-    if (!response.ok) return false
-    const data = await req.json();
-    return true
+    return res.ok;
   }
 }
-

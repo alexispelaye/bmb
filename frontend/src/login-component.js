@@ -62,20 +62,20 @@ class LoginForm extends HTMLElement {
                     color: #7f8c8d;
                     pointer-events: none;
                     transition: all 0.3s ease;
-                    background-color: white; 
-                    padding: 0 5px; 
+                    background-color: white;
+                    padding: 0 5px;
                     z-index: 10;
                 }
 
                .input-group input:focus + label,
                 .input-group input:not(:placeholder-shown) + label,
-                .input-group input:-webkit-autofill + label { 
-                    top: -18px; 
+                .input-group input:-webkit-autofill + label {
+                    top: -18px;
                     left: 5px;
                     font-size: 12px;
                     color: #d32f2f;
                 }
-                
+
                 button {
                     width: 100%;
                     padding: 12px;
@@ -96,7 +96,7 @@ class LoginForm extends HTMLElement {
                 button:active {
                     transform: scale(0.99);
                 }
-                
+
                 @keyframes fadeIn {
                     from { opacity: 0; transform: scale(0.95); }
                     to { opacity: 1; transform: scale(1); }
@@ -111,7 +111,7 @@ class LoginForm extends HTMLElement {
                     100% { transform: translateX(0); }
                 }
             </style>
-            
+
             <div class="login-container">
                 <h2>Iniciar Sesión</h2>
                 <form id="loginForm">
@@ -141,7 +141,7 @@ class LoginForm extends HTMLElement {
 
     // Lógica de autenticación:
     if (await session.login(username, password)) {
-      console.log(session.role)
+      console.log(session.role, 'ok', session)
       switch (session.role) {
         case 'admin':
           // Usuario Admin: Redirige al panel de control

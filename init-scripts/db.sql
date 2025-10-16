@@ -15,8 +15,7 @@ CREATE TABLE usuario (
   email VARCHAR(255) UNIQUE,
   contraseña VARCHAR(255) NOT NULL,
   usuario VARCHAR(255) NOT NULL UNIQUE,
-  role Role DEFAULT 'bombero',
-  id_bombero INTEGER,
+  role Role DEFAULT 'bombero'
 );
 
 CREATE TABLE bombero (
@@ -25,38 +24,44 @@ CREATE TABLE bombero (
   apellido VARCHAR(255) NOT NULL,
   nombre VARCHAR(255) NOT NULL,
   movil INTEGER UNIQUE NOT NULL,
-  id_usuario INTEGER NOT NULL,
+  id_usuario INTEGER UNIQUE NOT NULL,
   tipo TipoBombero NOT NULL,
   CONSTRAINT fk_bombero_usuario FOREIGN KEY (id_usuario)
     REFERENCES usuario (id)
-    DEFERRABLE INITIALLY DEFERRED
 );
 
-ALTER TABLE usuario
-ADD CONSTRAINT fk_usuario_bombero FOREIGN KEY (id_bombero)
-REFERENCES bombero (id)
-DEFERRABLE INITIALLY DEFERRED,
-ALTER COLUMN id_bombero SET NOT NULL;
+CREATE TABLE administrador (
+    id SERIAL PRIMARY KEY,
+    id_usuario INTEGER UNIQUE NOT NULL,
+    CONSTRAINT fk_admin_usuario FOREIGN KEY (id_usuario)
+        REFERENCES usuario (id)
+);
 
+CREATE OR REPLACE FUNCTION check_usuario_role_exclusivity()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_TABLE_NAME = 'bombero' THEN
+        IF EXISTS (SELECT 1 FROM administrador WHERE id_usuario = NEW.id_usuario) THEN
+            RAISE EXCEPTION 'El usuario con ID % ya está registrado como administrador.', NEW.id_usuario;
+        END IF;
+    ELSIF TG_TABLE_NAME = 'administrador' THEN
+        IF EXISTS (SELECT 1 FROM bombero WHERE id_usuario = NEW.id_usuario) THEN
+            RAISE EXCEPTION 'El usuario con ID % ya está registrado como cliente.', NEW.id_usuario;
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-BEGIN;
-INSERT INTO usuario (nombre, cliente_id)
-VALUES ('Juan Pérez', NULL)
-RETURNING id INTO :usuario_id;
+CREATE TRIGGER enforce_exclusivity_on_bombero
+BEFORE INSERT OR UPDATE ON bombero
+FOR EACH ROW
+EXECUTE FUNCTION check_usuario_role_exclusivity();
 
-INSERT INTO cliente (razon_social, usuario_id)
-VALUES ('Cliente A S.A.', :usuario_id)
-RETURNING id INTO :cliente_id;
-
-COMMIT;
-
-INSERT INTO bombero (genero, nombre, apellido, movil, id_usuario, tipo, estado) VALUES
-  ('Masculino', 'Juan', 'Perez', 12, 1, 'voluntario'),
-  ('Masculino', 'Carlos', 'Díaz', 13, 1, 'voluntario'),
-  ('Masculino', 'Pedro', 'Fernandez', 14, 1, 'fijo'),
-  ('Masculino', 'Luis', 'Gema', 15, 1, 'voluntario'),
-  ('Femenino', 'María', 'González', 16, 1, 'fijo'),
-  ('Femenino', 'Ana', 'López', 17, 1, 'voluntario');
+CREATE TRIGGER enforce_exclusivity_on_administrador
+BEFORE INSERT OR UPDATE ON administrador
+FOR EACH ROW
+EXECUTE FUNCTION check_usuario_role_exclusivity();
 
 CREATE TABLE equipamiento (
   id SERIAL PRIMARY KEY,
@@ -84,8 +89,6 @@ CREATE TABLE control (
   FOREIGN KEY (movil) REFERENCES bombero(movil)
 );
 
-INSERT INTO control (movil, fecha) VALUES
-    (16, CURRENT_DATE);
 
 CREATE MATERIALIZED VIEW bombero_estado AS
 WITH controles_mes AS (

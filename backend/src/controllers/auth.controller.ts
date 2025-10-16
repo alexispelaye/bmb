@@ -22,7 +22,7 @@ export const login: RequestHandler = async (req, res) => {
   }
   const payload = { usuario, role: dbUser.role, id: dbUser.id };
   const token = signToken(payload);
-  return res.send({ token, role: dbUser.role });
+  return res.send({ token });
 }
 
 export const me: RequestHandler = (req: RequestWithUser, res) => {
@@ -73,13 +73,6 @@ export const registerBombero: RequestHandler = async (req, res) => {
       [genero, apellido, nombre, movil, userId, tipo_bombero]
     );
 
-    const bomberoId = createBomberoResponse.rows[0].id;
-
-    await client.query(
-      'UPDATe usuario SET id_bombero = $1 WHERE id = $2',
-      [bomberoId, userId]
-    );
-
     await client.query('COMMIT');
 
     return res.status(201).json({});
@@ -117,9 +110,30 @@ export const registerAdmin: RequestHandler = async (req: RequestWithUser, res) =
     return res.status(400).json({
       message: 'User already exists'
     })
+  };
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const createUserResponse = await client.query(
+      'INSERT INTO usuario (usuario, contraseña, role) VALUES ($1, $2, $3) RETURNING id',
+      [usuario, hashPassword(contraseña), 'admin']
+    );
+    const userId = createUserResponse.rows[0].id;
+
+    const createAdminResponse = await client.query(
+      'INSERT INTO administrador (id_usuario) VALUES ($1) RETURNING id',
+      [userId]
+    );
+
+    return res.status(201).json({
+      message: 'Admin created'
+    })
+  } catch (e) {
+    await client.query('ROLLBACK');
+    res.status(500).json({
+      message: 'Error al registrar el usuario'
+    });
+  } finally {
+    client.release()
   }
-  const createUserResponse = await pool.query('INSERT INTO usuario (usuario, contraseña, role) VALUES ($1, $2, $3)', [usuario, hashPassword(contraseña), 'admin']);
-  return res.status(201).json({
-    message: 'Admin created'
-  })
 }
