@@ -61,11 +61,24 @@ export const registerBombero: RequestHandler = async (req, res) => {
       })
       throw new Error('User already exists');
     }
-    const createUserResponse = await client.query('INSERT INTO usuario (usuario, contraseña) VALUES ($1, $2)', [user, hashPassword(user)]);
+    const createUserResponse = await client.query(
+      'INSERT INTO usuario (usuario, contraseña) VALUES ($1, $2) RETURNING id',
+      [user, hashPassword(user)]
+    );
 
     const userId = createUserResponse.rows[0].id;
 
-    const createBomberoResponse = await client.query('INSERT INTO bombero (genero, apellido, nombre, movil, id_usuario, tipo_bombero) VALUES ($1, $2, $3, $4, $5, $6)', [genero, apellido, nombre, movil, userId, tipo_bombero]);
+    const createBomberoResponse = await client.query(
+      'INSERT INTO bombero (genero, apellido, nombre, movil, id_usuario, tipo_bombero) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+      [genero, apellido, nombre, movil, userId, tipo_bombero]
+    );
+
+    const bomberoId = createBomberoResponse.rows[0].id;
+
+    await client.query(
+      'UPDATe usuario SET id_bombero = $1 WHERE id = $2',
+      [bomberoId, userId]
+    );
 
     await client.query('COMMIT');
 

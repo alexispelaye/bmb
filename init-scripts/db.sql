@@ -15,7 +15,8 @@ CREATE TABLE usuario (
   email VARCHAR(255) UNIQUE,
   contraseña VARCHAR(255) NOT NULL,
   usuario VARCHAR(255) NOT NULL UNIQUE,
-  role Role DEFAULT 'bombero'
+  role Role DEFAULT 'bombero',
+  id_bombero INTEGER,
 );
 
 CREATE TABLE bombero (
@@ -26,7 +27,28 @@ CREATE TABLE bombero (
   movil INTEGER UNIQUE NOT NULL,
   id_usuario INTEGER NOT NULL,
   tipo TipoBombero NOT NULL,
+  CONSTRAINT fk_bombero_usuario FOREIGN KEY (id_usuario)
+    REFERENCES usuario (id)
+    DEFERRABLE INITIALLY DEFERRED
 );
+
+ALTER TABLE usuario
+ADD CONSTRAINT fk_usuario_bombero FOREIGN KEY (id_bombero)
+REFERENCES bombero (id)
+DEFERRABLE INITIALLY DEFERRED,
+ALTER COLUMN id_bombero SET NOT NULL;
+
+
+BEGIN;
+INSERT INTO usuario (nombre, cliente_id)
+VALUES ('Juan Pérez', NULL)
+RETURNING id INTO :usuario_id;
+
+INSERT INTO cliente (razon_social, usuario_id)
+VALUES ('Cliente A S.A.', :usuario_id)
+RETURNING id INTO :cliente_id;
+
+COMMIT;
 
 INSERT INTO bombero (genero, nombre, apellido, movil, id_usuario, tipo, estado) VALUES
   ('Masculino', 'Juan', 'Perez', 12, 1, 'voluntario'),
