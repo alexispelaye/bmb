@@ -1,14 +1,8 @@
-
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-body {
-    background-color: #f9f9f9;
-    color: var(--dark);
 }
 
 .container {
@@ -335,9 +329,40 @@ tr:hover {
 .epp-item h4 {
     margin-bottom: 5px;
 }
-
+.header {
+    display: none;
+}
 /* Responsive */
 @media (max-width: 768px) {
+    .container > .header {
+        display: flex;
+        background: var(--primary);
+        align-items: center;
+        border: none;
+        margin: 0;
+        padding: 10px;
+    }
+    .container > button {
+        height: min-content;
+    }
+
+    button#burger-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        z-index: 999;
+    }
+
+    .sidebar {
+        position: fixed;
+        transform: translateX(-100%);
+        transition: all .3s ease-in-out;
+        height: 100vh;
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
     .container {
         flex-direction: column;
     }

@@ -1,8 +1,12 @@
-import { Session } from './auth.js';
+import { Session } from '../auth.js';
 const session = new Session();
 class AdminDashboard extends HTMLElement {
   constructor() {
     super();
+    if (!session.loggedIn) {
+      window.location.href = '/'
+    }
+    console.log(session)
     this.controles = [];
     this.bomberos = [];
     this.filtros = {
@@ -11,22 +15,50 @@ class AdminDashboard extends HTMLElement {
         tipo: 'todos'
       }
     }
+    this.init();
+  }
 
-    this._cargarBomberos();
-    this._cargarControles();
+  async init() {
     this.attachShadow({ mode: 'open' });
-    this.render();
+    await this.render();
+    await this.cargarBomberos();
+    this.cargarControles();
     this.cargarControles();
     this.cargarDashboard();
     this.configurarTabs();
+    this.onclick = (event) => {
+      console.log(event.originalTarget);
+
+      if (event.originalTarget?.classList.contains('modal')) {
+        const modales = this.shadowRoot.querySelectorAll('.modal');
+        modales.forEach(modal => {
+          modal.style.display = 'none';
+        });
+      }
+    }
+  }
+
+  async getStyles(url) {
+    const cssText = await fetch(url).then(res => res.text());
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(cssText);
+    this.shadowRoot.adoptedStyleSheets = [
+      ...this.shadowRoot.adoptedStyleSheets,
+      sheet
+    ];
 
   }
-  render() {
-    this.shadowRoot.innerHTML = `
-      <link rel="stylesheet" href="admin-dashboard.css">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  async render() {
+    await this.getStyles('admin-dashboard.css')
+    await this.getStyles('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css')
+    this.shadowRoot.innerHTML += `
       <div class="container">
           <!-- Sidebar -->
+          <div class="header">
+            <button id="burger-btn">
+              <i class="fa fa-bars"></i>
+            </button>
+          </div>
           <div class="sidebar">
               <div class="logo">
                   <h1><i class="fas fa-fire-extinguisher"></i> Sistema EPP</h1>
@@ -152,7 +184,7 @@ class AdminDashboard extends HTMLElement {
                   </div>
 
                   <button class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo Control</button>
-                  <button class="btn btn-outline"><i class="fas fa-file-pdf"></i> Generar Reporte</button>
+                  <!-- <button class="btn btn-outline"><i class="fas fa-file-pdf"></i> Generar Reporte</button> -->
               </div>
           </div>
       </div>
@@ -343,28 +375,36 @@ class AdminDashboard extends HTMLElement {
           </div>
       </div>
       `
+    const sidebar = this.shadowRoot.querySelector('.sidebar');
+    const burgerBtn = this.shadowRoot.querySelector('#burger-btn');
+    burgerBtn.onclick = () => {
+      sidebar.classList.toggle('show')
+    }
 
-    const procModal = (modalName, submitFunc) => {
+    const procModal = (modalName, submitFunc, closeFunc) => {
       const modal = this.shadowRoot.querySelector(`#${modalName}Modal > .modal-content`);
       const closeModalBtn = modal.querySelector('.modal-header span');
       const submitModalBtn = modal.querySelector('.modal-body button');
-      closeModalBtn.onclick = () => this.closeModal(modalName);
+      closeModalBtn.onclick = () => closeFunc(modalName);
       submitModalBtn.onclick = submitFunc;
     }
 
-    procModal('nuevoControl', this.guardarControl);
-    procModal('nuevoBombero', this.guardarBombero);
-    procModal('review', this.saveReview);
+    procModal('nuevoControl', ()=>this.guardarControl(), (n) => this.closeModal(n));
+    procModal('nuevoBombero', ()=>this.guardarBombero(), (n) => this.closeModal(n));
+    procModal('review', ()=>this.saveReview(), (n)=>this.closeModal(n));
 
     const procTab = (tabName, modalName)=>{
-      const tab = this.shadowRoot.querySelector(`#${tabName}-tab`)
-      const tabBtn = tab.querySelector('button');
-      const tabFilters = tab.querySelector('filters');
+      const tab = this.shadowRoot.querySelector(`#${tabName}-tab`);
+      const tabBtns = tab.querySelectorAll('button.btn-primary');
+
+      const tabFilters = tab.querySelector('.filters');
+      console.log(tab);
       if (tabFilters) {
-        const tabFiltersBtn = tabFilters.querySelector('button');
-        tabFiltersBtn.onclick = this.aplicarFiltros;
+        tabBtns[0].onclick = ()=> this.aplicarFiltros();
+        tabBtns[1].onclick = () => this.openModal(modalName);
+      } else {
+        tabBtns[0].onclick = () => this.openModal(modalName)
       }
-      tabBtn.onclick = ()=>this.openModal(modalName)
     }
 
     procTab('controles', 'nuevoControl');
@@ -410,11 +450,11 @@ class AdminDashboard extends HTMLElement {
   }
 
   async guardarBombero() {
-    const nombre = document.getElementById('nombre').value;
-    const apellido = document.getElementById('apellido').value;
-    const movil = document.getElementById('movil').value;
-    const genero = document.getElementById('genero').value;
-    const tipo = document.getElementById('tipo').value;
+    const nombre = this.shadowRoot.querySelector('#nombre').value;
+    const apellido = this.shadowRoot.querySelector('#apellido').value;
+    const movil = this.shadowRoot.querySelector('#movil').value;
+    const genero = this.shadowRoot.querySelector('#genero').value;
+    const tipo = this.shadowRoot.querySelector('#tipo').value;
 
     if (!nombre || !apellido || !movil) {
       alert('Por favor complete todos los campos obligatorios');
@@ -422,6 +462,10 @@ class AdminDashboard extends HTMLElement {
     }
 
     const { ok } = await session.authFetch('auth/registrar-bombero', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         nombre,
         apellido,
@@ -432,22 +476,24 @@ class AdminDashboard extends HTMLElement {
     });
     if (!ok){
       alert('Error al registrar bombero')
+      return;
     }
 
     alert('Bombero registrado correctamente');
-    closeModal('nuevoBombero');
+    this.closeModal('nuevoBombero');
 
-    document.getElementById('nombre').value = '';
-    document.getElementById('apellido').value = '';
-    document.getElementById('movil').value = '';
-    cargarBomberos();
+    this.shadowRoot.getElementById('nombre').value = '';
+    this.shadowRoot.getElementById('apellido').value = '';
+    this.shadowRoot.getElementById('movil').value = '';
+    this.cargarBomberos();
   }
 
   async cargarBomberos() {
     const tbody = this.shadowRoot.querySelector('#tablaBomberos tbody');
     tbody.innerHTML = '';
     await this._cargarBomberos();
-    const bomberosFiltrados = bomberos.filter(bombero => {
+    console.log('fm', this.bomberos)
+    const bomberosFiltrados = this.bomberos.filter(bombero => {
       const cumpleTipo = this.filtros.bomberos.tipo === 'todos' || bombero.tipo.toLowerCase()[0] === this.filtros.bomberos.tipo.toLowerCase()[0];
       const cumpleGenero = this.filtros.bomberos.genero === 'todos' || bombero.genero.toLowerCase()[0] === this.filtros.bomberos.genero.toLowerCase()[0];
       return cumpleTipo && cumpleGenero;
@@ -492,7 +538,8 @@ class AdminDashboard extends HTMLElement {
   async _cargarBomberos() {
     const response = await fetch('http://localhost:3000/api/bomberos')
     const data = await response.json()
-    if (data.success) this.bomberos = data
+    console.log(data)
+    if (response.ok) this.bomberos = data
   }
 
   async _cargarControles() {
@@ -503,16 +550,19 @@ class AdminDashboard extends HTMLElement {
 
   configurarTabs() {
     const tabs = this.shadowRoot.querySelectorAll('.tab');
+
     tabs.forEach(tab => {
-      tab.addEventListener('click', function () {
+      const tabListener = () => {
         tabs.forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
+        tab.classList.add('active');
         this.shadowRoot.querySelectorAll('.tab-content').forEach(content => {
           content.classList.remove('active');
         });
-        const tabId = this.getAttribute('data-tab');
+        const tabId = tab.getAttribute('data-tab');
         this.shadowRoot.querySelector(`#${tabId}-tab`).classList.add('active');
-      });
+      }
+
+      tab.addEventListener('click', tabListener);
     });
   }
 
@@ -520,14 +570,14 @@ class AdminDashboard extends HTMLElement {
     console.log(this.shadowRoot.getElementById('#tipoFiltro'))
     this.filtros.bomberos.tipo = this.shadowRoot.querySelector('#tipoFiltro').value;
     this.filtros.bomberos.genero = this.shadowRoot.querySelector('#generoFiltro').value;
-    cargarBomberos();
+    this.cargarBomberos();
   }
 
   guardarControl() {
-    const bomberoId = document.getElementById('bomberoControl').value;
-    const fecha = document.getElementById('fechaControl').value;
-    const tipoControl = document.getElementById('tipoControl').value;
-    const observaciones = document.getElementById('observacionesControl').value;
+    const bomberoId = this.shadowRoot.getElementById('bomberoControl').value;
+    const fecha = this.shadowRoot.getElementById('fechaControl').value;
+    const tipoControl = this.shadowRoot.getElementById('tipoControl').value;
+    const observaciones = this.shadowRoot.getElementById('observacionesControl').value;
 
     if (!bomberoId || !fecha) {
       alert('Por favor complete todos los campos obligatorios');
@@ -544,7 +594,6 @@ class AdminDashboard extends HTMLElement {
     if (tipo === 'nuevoControl') {
       const selectBombero = this.shadowRoot.getElementById('bomberoControl');
       selectBombero.innerHTML = '<option value="">Seleccione un bombero</option>';
-
       this.bomberos.forEach(bombero => {
         const option = document.createElement('option');
         option.value = bombero.id;
@@ -584,11 +633,3 @@ customElements.define('admin-dashboard', AdminDashboard)
 
 
 // Cerrar modal al hacer clic fuera de él
-window.onclick = function (event) {
-  if (event.target.classList.contains('modal')) {
-    const modales = document.querySelectorAll('.modal');
-    modales.forEach(modal => {
-      modal.style.display = 'none';
-    });
-  }
-}
