@@ -89,17 +89,17 @@ class AdminDashboard extends HTMLElement {
                   <div class="card success" id="ok">
                       <h3>EPP en Óptimas Condiciones</h3>
                       <div class="value"></div>
-                      <p>Bomberos con equipos al día</p>
+                      <p>Bomberos con controles al día</p>
                   </div>
                   <div class="card warning" id="warning">
                       <h3>EPP por Vencer</h3>
                       <div class="value"></div>
-                      <p>Equipos con revisión próxima</p>
+                      <p>Bomberos con controles insuficientes</p>
                   </div>
                   <div class="card danger" id="danger">
                       <h3>EPP Vencidos</h3>
                       <div class="value"></div>
-                      <p>Equipos que necesitan revisión urgente</p>
+                      <p>Bomberos sin controles en el mes</p>
                   </div>
                   <div class="card info" id="activos">
                       <h3>Total de Bomberos</h3>
@@ -389,18 +389,18 @@ class AdminDashboard extends HTMLElement {
       submitModalBtn.onclick = submitFunc;
     }
 
-    procModal('nuevoControl', ()=>this.guardarControl(), (n) => this.closeModal(n));
-    procModal('nuevoBombero', ()=>this.guardarBombero(), (n) => this.closeModal(n));
-    procModal('review', ()=>this.saveReview(), (n)=>this.closeModal(n));
+    procModal('nuevoControl', () => this.guardarControl(), (n) => this.closeModal(n));
+    procModal('nuevoBombero', () => this.guardarBombero(), (n) => this.closeModal(n));
+    procModal('review', () => this.saveReview(), (n) => this.closeModal(n));
 
-    const procTab = (tabName, modalName)=>{
+    const procTab = (tabName, modalName) => {
       const tab = this.shadowRoot.querySelector(`#${tabName}-tab`);
       const tabBtns = tab.querySelectorAll('button.btn-primary');
 
       const tabFilters = tab.querySelector('.filters');
       console.log(tab);
       if (tabFilters) {
-        tabBtns[0].onclick = ()=> this.aplicarFiltros();
+        tabBtns[0].onclick = () => this.aplicarFiltros();
         tabBtns[1].onclick = () => this.openModal(modalName);
       } else {
         tabBtns[0].onclick = () => this.openModal(modalName)
@@ -474,7 +474,7 @@ class AdminDashboard extends HTMLElement {
         tipo
       })
     });
-    if (!ok){
+    if (!ok) {
       alert('Error al registrar bombero')
       return;
     }
