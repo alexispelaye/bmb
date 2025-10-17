@@ -18,7 +18,11 @@ export const authMiddleware = (req: RequestWithUser, res: Response, next: NextFu
       message: 'No token provided'
     });
   }
-  const decoded = verifyToken(token);
+
+  const [_, jwt] = token.split(' ');
+
+  console.log(jwt)
+  const decoded = verifyToken(jwt);
   if (!decoded) {
     return res.status(401).json({
       message: 'Invalid token'
