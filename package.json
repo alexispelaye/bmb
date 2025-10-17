@@ -7,9 +7,12 @@
     "docker:up": "sudo docker compose --env-file ./backend/.env up -d",
     "docker:down": "sudo docker compose --env-file ./backend/.env down",
     "docker:delete": "sudo docker compose --env-file ./backend/.env down -v",
-    "backend:start": "cd backend && npm run start",
-    "frontend:start": "cd frontend && npm run start",
-    "start": "concurrently -n backend,frontend -c 'blue.bold,magenta.bold' 'pnpm run backend:start' 'pnpm run frontend:start'"
+    "backend:start": "cd backend && pnpm run start",
+    "frontend:start": "cd frontend && pnpm run start",
+    "backend:dev": "cd backend && pnpm run dev",
+    "frontend:dev": "cd frontend && pnpm run dev",
+    "start": "concurrently -n backend,frontend -c 'blue.bold,magenta.bold' 'pnpm run backend:start' 'pnpm run frontend:start'",
+    "dev": "concurrently -n backend,frontend -c 'blue.bold,magenta.bold' 'pnpm run backend:dev' 'pnpm run frontend:dev'"
   },
   "repository": {
     "type": "git",
