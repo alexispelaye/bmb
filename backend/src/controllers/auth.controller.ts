@@ -29,38 +29,62 @@ export const me: RequestHandler = (req: RequestWithUser, res) => {
   return res.send(req.user);
 }
 
+const userConflict = async (usuario: string, movil: string)=>{
+  const {rows} = await pool.query(`
+          SELECT EXISTS (
+              SELECT 1 FROM usuario u WHERE u.usuario = $1
+              UNION ALL
+              SELECT 1 FROM bombero WHERE b.movil = $2
+          ) AS conflict;
+      `,[usuario, movil])
+  return rows[0].conflict;
+}
+
 export const registerBombero: RequestHandler = async (req, res) => {
-  const { apellido, movil, nombre, tipo_bombero, genero } = req.body;
-  for (const key in ['apellido', 'movil', 'nombre', 'tipo_bombero', 'genero']) {
+  const { apellido, movil, nombre, tipo, genero } = req.body;
+  const keys = ['apellido', 'movil', 'nombre', 'genero', 'tipo'];
+  for (const key of keys) {
+    console.log(key, keys);
     if (req.body[key] === undefined) {
+      console.log(req.body[key])
       return res.status(400).json({
         message: `${key} is required`
       })
     }
   }
-  if (!(genero.toLowerCase() === 'f' || genero.toLowerCase() === 'm')) {
-    return res.status(400).json({
-      message: 'Genero invalido'
-    })
+  let procGenero = genero.toLowerCase()[0]
+  switch (procGenero) {
+    case 'f': {
+      procGenero = 'Femenino';
+      break;
+    }
+    case 'm': {
+      procGenero = 'Masculino';
+      break;
+    }
+    default: {
+      return res.status(400).json({
+        message: 'Genero invalido'
+      })
+    }
   }
 
-  if (!(tipo_bombero.toLowerCase() === 'voluntario' || tipo_bombero.toLowerCase() === 'fijo')) {
+  if (!(tipo.toLowerCase() === 'voluntario' || tipo.toLowerCase() === 'fijo')) {
     return res.status(400).json({
       message: 'Tipo de bombero invalido'
     })
   }
+  const user = `${apellido}_${movil}`;
 
+  if (userConflict(user, movil)) {
+    res.status(409).json({
+      message: 'Usuario/Movil en uso'
+    })
+  }
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const user = `${apellido}_${movil}`;
-    const dbResponse = await client.query('SELECT * FROM usuario as u WHERE u.usuario = $1', [user]);
-    if (dbResponse.rows.length) {
-      res.status(400).json({
-        message: 'User already exists'
-      })
-      throw new Error('User already exists');
-    }
+
     const createUserResponse = await client.query(
       'INSERT INTO usuario (usuario, contraseña) VALUES ($1, $2) RETURNING id',
       [user, hashPassword(user)]
@@ -68,14 +92,14 @@ export const registerBombero: RequestHandler = async (req, res) => {
 
     const userId = createUserResponse.rows[0].id;
 
-    const createBomberoResponse = await client.query(
-      'INSERT INTO bombero (genero, apellido, nombre, movil, id_usuario, tipo_bombero) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-      [genero, apellido, nombre, movil, userId, tipo_bombero]
+    await client.query(
+      'INSERT INTO bombero (genero, apellido, nombre, movil, id_usuario, tipo) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+      [procGenero, apellido, nombre, movil, userId, tipo]
     );
 
     await client.query('COMMIT');
 
-    return res.status(201).json({});
+    res.status(201).json({});
   } catch (error) {
     await client.query('ROLLBACK');
     res.status(500).json({
