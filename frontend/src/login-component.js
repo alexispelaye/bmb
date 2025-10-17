@@ -145,7 +145,7 @@ class LoginForm extends HTMLElement {
       switch (session.role) {
         case 'admin':
           // Usuario Admin: Redirige al panel de control
-          redirectUrl = 'pantallaadmin.html';
+          redirectUrl = 'admin-dashboard/admin-dashboard.html';
           break;
         case 'bombero':
           // Usuario Bombero/Normal: Redirige a la pantalla de usuario
