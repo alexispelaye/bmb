@@ -2,7 +2,8 @@ import { RequestHandler } from "express";
 import { pool } from "../config/db";
 
 export const getAll: RequestHandler = async (req, res) => {
-  const dbResponse = await pool.query('SELECT * FROM bombero');
+  const dbResponse = await pool.query('SELECT bombero.*, be.estado_bombero as estado FROM bombero LEFT JOIN bombero_estado be ON be.id = bombero.id');
+  console.log(dbResponse.rows)
   return res.json(dbResponse.rows);
 }
 
