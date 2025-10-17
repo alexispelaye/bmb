@@ -22,8 +22,8 @@
     "url": "https://github.com/alexispelaye/bmb/issues"
   },
   "homepage": "https://github.com/alexispelaye/bmb#readme",
-  "dependencies": {
+  "packageManager": "pnpm@10.0.0",
+  "devDependencies": {
     "concurrently": "^9.2.1"
-  },
-  "packageManager": "pnpm@10.0.0"
+  }
 }
