@@ -9,7 +9,7 @@
     "docker:delete": "sudo docker compose --env-file ./backend/.env down -v",
     "backend:start": "cd backend && npm run start",
     "frontend:start": "cd frontend && npm run start",
-    "start": "concurrently -n backend,frontend -c 'blue.bold,magenta.bold' 'npm run backend:start' 'npm run frontend:start'"
+    "start": "concurrently -n backend,frontend -c 'blue.bold,magenta.bold' 'pnpm run backend:start' 'pnpm run frontend:start'"
   },
   "repository": {
     "type": "git",
@@ -22,11 +22,8 @@
     "url": "https://github.com/alexispelaye/bmb/issues"
   },
   "homepage": "https://github.com/alexispelaye/bmb#readme",
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
   "dependencies": {
     "concurrently": "^9.2.1"
-  }
+  },
+  "packageManager": "pnpm@10.0.0"
 }
