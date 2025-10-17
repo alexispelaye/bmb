@@ -1,8 +1,3 @@
-DROP TABLE IF EXISTS usuario;
-DROP TABLE IF EXISTS bombero;
-DROP TABLE IF EXISTS equipamiento;
-DROP TABLE IF EXISTS equipamiento_bombero;
-
 CREATE TYPE Genero AS ENUM ('Femenino', 'Masculino');
 CREATE TYPE Esta as ENUM ('Si', 'No');
 CREATE TYPE Role as ENUM ('bombero', 'admin');
