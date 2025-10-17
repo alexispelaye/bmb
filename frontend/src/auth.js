@@ -6,17 +6,20 @@ const LOCAL_STORAGE_TOKEN_KEY = 'bmb-token';
 export class Session {
   #token;
   role;
+  loggedIn;
   constructor() {
-    this.recoverFromLocal();
+    this.loggedIn = this.recoverFromLocal();
   }
   async authFetch(endpoint, options) {
     const response = await fetch(getEndpoint(endpoint), {
       ...options,
       headers: {
+        ...options.headers,
         Authorization: `Bearer ${this.#token}`
       }
     })
-    const data = await req.json()
+    console.log(this.#token)
+    const data = await response.json()
     return { ok: response.ok, data }
   }
 
@@ -60,9 +63,15 @@ export class Session {
 
   saveJwt(token) {
     const parsedToken = this.parseJwt(token);
+
     if (!parsedToken) {
       return false;
     };
+    console.log(parsedToken['exp'], Date.now()/1000)
+    if (parsedToken['exp'] < Date.now() / 1000) {
+      return false;
+    }
+
     this.#token = token;
     this.role = parsedToken['role'];
     return true;
