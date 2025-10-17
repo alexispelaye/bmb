@@ -1,22 +1,25 @@
 {
-    "jsc": {
-        "parser": {
-            "syntax": "ecmascript",
-            "jsx": false
-        },
-        "transform": null,
-        "target": "es2021",
-        "baseUrl": ".",
-        "paths": {
-            "~/*": [
-                "./*"
-            ],
-            "@/*": [
-                "./*"
-            ]
-        }
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "jsx": false,
+      "decorators": true,
+      "privateMethods": true
     },
-    "module": {
-        "type": "es6"
+    "target": "es2024",
+    "baseUrl": ".",
+    "paths": {
+      "~/*": [
+        "./*"
+      ],
+      "@/*": [
+        "./*"
+      ]
     }
+  },
+  "module": {
+    "type": "commonjs",
+    "strict": true
+  },
+  "sourceMaps": true
 }
