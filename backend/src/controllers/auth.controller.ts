@@ -3,18 +3,19 @@ import { RequestWithUser } from "../middlewares/auth.middleware";
 import { signToken } from "../utils/jwt";
 import { comparePassword, hashPassword } from "../utils/password";
 import { pool } from "../config/db";
+import { addControl } from "./control.controller";
 
 export const login: RequestHandler = async (req, res) => {
   console.log(req)
   const { usuario, password } = req.body;
   const contraseña = password;
-  const dbResponse = await pool.query('SELECT * FROM usuario as u WHERE u.usuario = $1', [usuario]);
-  if (!dbResponse.rows.length) {
+  const { rows } = await pool.query('SELECT * FROM usuario as u WHERE u.usuario = $1', [usuario]);
+  if (!rows.length) {
     return res.status(401).json({
       message: 'Invalid credentials'
     })
   }
-  const dbUser = dbResponse.rows[0];
+  const dbUser = rows[0];
   if (!comparePassword(contraseña, dbUser.contraseña)) {
     return res.status(401).json({
       message: 'Invalid credentials'
@@ -29,51 +30,57 @@ export const me: RequestHandler = (req: RequestWithUser, res) => {
   return res.send(req.user);
 }
 
-const userConflict = async (usuario: string, movil: string)=>{
-  const {rows} = await pool.query(`
+const userConflict = async (usuario: string, movil: string) => {
+  const { rows } = await pool.query(`
           SELECT EXISTS (
               SELECT 1 FROM usuario u WHERE u.usuario = $1
               UNION ALL
               SELECT 1 FROM bombero WHERE b.movil = $2
           ) AS conflict;
-      `,[usuario, movil])
+      `, [usuario, movil])
   return rows[0].conflict;
 }
 
-export const registerBombero: RequestHandler = async (req, res) => {
-  const { apellido, movil, nombre, tipo, genero } = req.body;
-  const keys = ['apellido', 'movil', 'nombre', 'genero', 'tipo'];
-  for (const key of keys) {
-    console.log(key, keys);
-    if (req.body[key] === undefined) {
-      console.log(req.body[key])
-      return res.status(400).json({
-        message: `${key} is required`
-      })
-    }
-  }
-  let procGenero = genero.toLowerCase()[0]
-  switch (procGenero) {
-    case 'f': {
-      procGenero = 'Femenino';
-      break;
-    }
-    case 'm': {
-      procGenero = 'Masculino';
-      break;
-    }
-    default: {
-      return res.status(400).json({
-        message: 'Genero invalido'
-      })
-    }
-  }
+const Genero = {
+  'm': 'Masculino',
+  'f': 'Femenino'
+}
 
-  if (!(tipo.toLowerCase() === 'voluntario' || tipo.toLowerCase() === 'fijo')) {
-    return res.status(400).json({
-      message: 'Tipo de bombero invalido'
-    })
+export class ValidationError extends Error {
+  constructor(message: string | string[]) {
+    super(JSON.stringify(message));
   }
+}
+
+type Body = Record<string, unknown>
+
+const validateFields = <K extends string[]>(body: Body, fields: K): Record<K[number], string> => {
+  let err: string[] = []
+  let parsedFields: Record<K[number], string> = {} as Record<K[number], string>;
+  fields.forEach(field => {
+    if (field in body) {
+      parsedFields[field] = body[field];
+    } else {
+      err.push(`El campo '${field}' es obligatorio`);
+    };
+  });
+  if (err.length) throw new ValidationError(err)
+  return parsedFields
+}
+
+export const registerBombero: RequestHandler = async (req, res) => {
+  const { apellido, movil, nombre, tipo, genero } = validateFields(req.body, ['apellido', 'movil', 'nombre', 'genero', 'tipo']);
+
+  let procGenero = genero.toLowerCase()[0]
+
+  if (Genero[procGenero] === undefined) return res.status(400).json({
+    message: 'Genero invalido'
+  })
+
+  if (!(tipo.toLowerCase() === 'voluntario' || tipo.toLowerCase() === 'fijo')) return res.status(400).json({
+    message: 'Tipo de bombero invalido'
+  })
+
   const user = `${apellido}_${movil}`;
 
   if (userConflict(user, movil)) {
@@ -81,7 +88,9 @@ export const registerBombero: RequestHandler = async (req, res) => {
       message: 'Usuario/Movil en uso'
     })
   }
+
   const client = await pool.connect();
+
   try {
     await client.query('BEGIN');
 
